@@ -1,16 +1,18 @@
 # inspired by pycocotools
-import os
 import json
-import pandas as pd
-
+import os
 from collections import defaultdict
 
+import pandas as pd
+
+
 class COCO():
+
     def __init__(self, annotation_path):
         self.dataset = None
-        if not annotation_path == None:
-            dataset = json.load(open(annotation_path, 'r'))
-            assert type(dataset)==dict, f'annotation file format {type(dataset)} not supported'
+        if annotation_path is not None:
+            dataset = json.load(open(annotation_path))
+            assert type(dataset) == dict, f'annotation file format {type(dataset)} not supported'
             self.dataset = dataset
         self.create_index()
 
@@ -46,7 +48,7 @@ class COCO():
         self.imgs = imgs
         self.imgs_filenames = imgs_filenames
         self.cats = cats
-    
+
     def as_df(self):
         data = []
         for img_id, anns in self.img_to_anns.items():
@@ -74,4 +76,3 @@ class COCO():
         if len(data):
             df = pd.DataFrame(data)
             return df
-        

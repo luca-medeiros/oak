@@ -1,0 +1,7 @@
+
+
+ci:
+  - '.github/**'
+  - 'dockers/**'
+  - '.pre-commit-config.yml'
+  - '.style.yapf'
