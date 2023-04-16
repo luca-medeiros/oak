@@ -1,34 +1,51 @@
-import json
-import pandas as pd
+import os
 from pathlib import Path
-from typing import List, Union, Tuple
-from fastdup.fastdup_controller import FastdupController
+from typing import Union, Tuple
 from fastdup import Fastdup
+
 from coco import COCO
 
 
 class Oak(Fastdup):
-    def __init__(self, data_dir: Union[str, Path], cache_folder: Union[str, Path], coco_annotations: Union[str, Path] = None):
+    def __init__(self, data_dir: Union[str, Path], cache_folder: Union[str, Path], coco_annotations: Union[None, str, Path] = None):
         super().__init__(cache_folder, data_dir)
         self.data_dir = data_dir
         self._coco = COCO(coco_annotations)
     
     def run(self, print_summary: bool = True, overwrite: bool = False, **fastdup_kwargs):
-        annotations_df = self._coco.as_df()
-        super().run(annotations=annotations_df, overwrite=overwrite, **fastdup_kwargs)
+        # annotations_df = self._coco.as_df()
+        annotations_df = None
+        super().run(annotations=annotations_df, overwrite=overwrite, print_summary=print_summary, **fastdup_kwargs)
 
     def tag_data(self, filters=None): # add filters class
         connected_components_df , _ = self.connected_components()
         outlier_df = self.outliers()
         stats_df = self.img_stats()
+        invalid_df = self.invalid_instances()
         duplicate_images = parse_duplicates(connected_components_df)
         outlier_images = outlier_df[outlier_df.distance < 0.68].filename_nearest.tolist()
-        broken_images = self.invalid_instances()
-        broken_images = broken_images['filename'].to_list()
-        blurry_images = stats_df[stats_df['blur'] < 50]
-        bright_images = stats_df[stats_df['mean'] > 220.5]
-        dark_images = stats_df[stats_df['mean'] < 13]
-        a = 1
+        broken_images = invalid_df['filename'].to_list()
+        blurry_images = stats_df[stats_df['blur'] < 50]['filename'].to_list()
+        bright_images = stats_df[stats_df['mean'] > 220.5]['filename'].to_list()
+        dark_images = stats_df[stats_df['mean'] < 13]['filename'].to_list()
+
+        tag_groups = {
+            'duplicate': set(duplicate_images),
+            'outlier': set(outlier_images),
+            'broken': set(broken_images),
+            'blurry': set(blurry_images),
+            'bright': set(bright_images),
+            'dark': set(dark_images),
+        }
+
+        if self._coco.dataset is not None:
+            for tag_name, filenames in tag_groups.items():
+                for filename in filenames:
+                    filename = os.path.basename(filename)
+                    if 'tag' not in self._coco.imgs_filenames[filename]:
+                        self._coco.imgs_filenames[filename]['tag'] = [tag_name]
+                    else:
+                        self._coco.imgs_filenames[filename]['tag'].append(tag_name)
 
 
 
@@ -53,7 +70,7 @@ def parse_duplicates(df, sort_by='count', min_count=2, ascending=False):
 
 
 if __name__ == '__main__':
-    oak = Oak('./oak/small_coco/data', './oak/small_coco/fastdup', './oak/small_coco/coco.json')
-    oak.run(overwrite=True, data_type='bbox')
+    oak = Oak('tiny-coco/small_coco/train_2017_small', 'tiny-coco/small_coco/train_2017_smallastdup', 'tiny-coco/small_coco/coco.json')
+    oak.run(overwrite=True)
     oak.tag_data()
     a = 1

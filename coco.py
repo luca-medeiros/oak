@@ -18,6 +18,7 @@ class COCO():
         anns = {}
         cats = {}
         imgs = {}
+        imgs_filenames = {}
         img_to_anns = defaultdict(list)
         cat_to_imgs = defaultdict(list)
         if self.dataset is not None:
@@ -29,6 +30,7 @@ class COCO():
             if 'images' in self.dataset:
                 for img in self.dataset['images']:
                     imgs[img['id']] = img
+                    imgs_filenames[img['file_name']] = img
 
             if 'categories' in self.dataset:
                 for cat in self.dataset['categories']:
@@ -42,6 +44,7 @@ class COCO():
         self.img_to_anns = img_to_anns
         self.cat_to_imgs = cat_to_imgs
         self.imgs = imgs
+        self.imgs_filenames = imgs_filenames
         self.cats = cats
     
     def as_df(self):
