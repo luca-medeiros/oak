@@ -14,7 +14,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8, <3.11"
-fastdup = "^0.925"
+fastdup = "^0.927"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.2.2"
